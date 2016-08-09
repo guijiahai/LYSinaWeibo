@@ -1,0 +1,76 @@
+//
+//  PrefixHeader.pch
+//  LYSinaWeibo
+//
+//  Created by GuiJiahai on 16/7/2.
+//  Copyright © 2016年 GuiJiahai. All rights reserved.
+//
+
+#import "LYBaseViewController.h"
+#import "LYBaseNavigationController.h"
+#import "UIView+Common.h"
+#import "LYNetworkTool.h"
+#import "LYLogin.h"
+#import "LYUser.h"
+#import "NSDate+Common.h"
+#import "NSString+Common.h"
+#import "UIColor+Common.h"
+#import "UIImage+Common.h"
+#import "UIBarButtonItem+Common.h"
+#import "UIControl+BlocksKit.h"
+#import "UIButton+Common.h"
+#import "dispath_common.h"
+#import "NSObject+Common.h"
+#import "LYSecret.h"
+//#import "AppDelegate.h"
+
+#import <SDWebImage/UIImageView+WebCache.h>
+#import <Masonry/Masonry.h>
+#import <Mantle/Mantle.h>
+#import <MJExtension/MJExtension.h>
+#import <MJRefresh/MJRefresh.h>
+#import <SVProgressHUD/SVProgressHUD.h>
+#import <APParallaxHeader/UIScrollView+APParallaxHeader.h>
+#import <BlocksKit/BlocksKit.h>
+#import <BlocksKit/BlocksKit+UIKit.h>
+#import <ReactiveCocoa/ReactiveCocoa.h>
+
+
+#define LYRootViewControllerSwitchNotification  @"LYRootViewControllerSwitchNotification"
+#define LYAvatarDefaultSmallImageName   @"avatar_default_small"
+
+
+#define LyColor(r, g, b)    [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:1]
+#define LyColorAlpha(r, g, b, a)    [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:(a)]
+#define LYMainColor     [UIColor colorWithRed:255/255.0 green:117/255.0 blue:0/255.0 alpha:1]
+#define LYBackgroundColor   [UIColor colorWithWhite:244.0/255 alpha:1]
+
+#ifdef DEBUG
+#define DebugLog(...)   NSLog(__VA_ARGS__)
+#else
+#define DebugLog(...)
+#endif
+
+#define kKeyWindow      [UIApplication sharedApplication].keyWindow
+
+#define kDevice_Is_iPhone5  ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(640, 1136), [[UIScreen mainScreen] currentMode].size) : NO)
+#define kDevice_Is_iPhone6  ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(750, 1334), [[UIScreen mainScreen] currentMode].size) : NO)
+#define kDevice_Is_iPhone6Plus  ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(1242, 2208), [[UIScreen mainScreen] currentMode].size) : NO)
+
+#define kScreen_Bounds      [UIScreen mainScreen].bounds
+#define kScreen_Width       [UIScreen mainScreen].bounds.size.width
+#define kScreen_Height      [UIScreen mainScreen].bounds.size.height
+
+
+#define ESWeak(var, weakVar) __weak __typeof(&*var) weakVar = var
+#define ESStrong_DoNotCheckNil(weakVar, _var) __typeof(&*weakVar) _var = weakVar
+#define ESStrong(weakVar, _var) ESStrong_DoNotCheckNil(weakVar, _var); if (!_var) return;
+
+#define ESWeak_(var) ESWeak(var, weak_##var);
+#define ESStrong_(var) ESStrong(weak_##var, _##var);
+
+#define ESWeakSelf ESWeak(self, weakSelf);
+#define ESStrongSelf ESStrong(weakSelf, strongSelf);
+
+#define kLinkAttributes     @{(__bridge NSString *)kCTUnderlineStyleAttributeName : @NO, (__bridge NSString *)kCTForegroundColorAttributeName : [UIColor colorWithHexString:@"0x3bbd79"]}
+#define kLinkAttributesActive   @{(__bridge NSString *)kCTUnderlineStyleAttributeName : @NO, (__bridge NSString *)kCTForegroundColorAttributeName : [UIColor colorWithHexString:@"0x1b9d59"]}
