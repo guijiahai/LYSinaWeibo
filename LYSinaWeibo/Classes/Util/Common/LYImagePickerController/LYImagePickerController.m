@@ -14,6 +14,8 @@
 
 @interface LYPhotoPickerController : UIViewController
 
+@property (nonatomic, assign) BOOL onlyForSinglePhoto;
+
 @end
 
 @interface LYImagePickerController ()
@@ -31,15 +33,31 @@
 - (instancetype)initWithMaxChooseCount:(NSUInteger)maxChooseCount pickerDelegate:(id<LYImagePickerControllerDelegate>)pickerDelegate {
     
     LYPhotoPickerController *picker = [[LYPhotoPickerController alloc] init];
-    if (self = [super initWithRootViewController:picker]) {
+    picker.onlyForSinglePhoto = NO;
+    if (self = [self initWithRootViewController:picker]) {
         self.navigationBar.translucent = NO;
         
         self.maxChooseCount = maxChooseCount == 0 ? NSUIntegerMax : maxChooseCount;
         self.pickerDelegate = pickerDelegate;
-        
+    }
+    return self;
+}
+
+- (instancetype)initWithSinglePickerDelegate:(id<LYImagePickerControllerDelegate>)pickerDelegate {
+    LYPhotoPickerController *picker = [[LYPhotoPickerController alloc] init];
+    picker.onlyForSinglePhoto = YES;
+    if (self = [self initWithRootViewController:picker]) {
+        self.navigationBar.translucent = NO;
+        self.pickerDelegate = pickerDelegate;
+    }
+    return self;
+}
+
+- (instancetype)initWithRootViewController:(UIViewController *)rootViewController {
+    if (self = [super initWithRootViewController:rootViewController]) {
         self.sortAscendingByModificationDate = NO;
-        self.allowPickingOrignalPhoto = YES;
-        self.allowTakingPicture = YES;
+        self.allowPickingOrignalPhoto = NO;
+        self.allowTakingPicture = NO;
         self.orignalPhotos = NO;
     }
     return self;
@@ -87,18 +105,24 @@
 
 - (void)setupUI {
     dispatch_async_inMain(^{
-        self.navigationItem.rightBarButtonItem = [UIBarButtonItem composeItemWithTitle:@"下一步" target:self action:@selector(next:)];
+        
+        if (!self.onlyForSinglePhoto) {
+            self.navigationItem.rightBarButtonItem = [UIBarButtonItem composeItemWithTitle:@"下一步" target:self action:@selector(next:)];
+        }
         
         self.titleView = [[LYNavigationTitleView alloc] init];
         self.titleView.delegate = self;
         self.navigationItem.titleView = self.titleView;
         
         [self.view addSubview:self.collectionView];
-        [self.view addSubview:self.toolBar];
-        [self.toolBar addSubview:self.previewButton];
         
-        if (self.navigation.allowPickingOrignalPhoto) {
-            [self originalButton];
+        if (!self.onlyForSinglePhoto) {
+            [self.view addSubview:self.toolBar];
+            [self.toolBar addSubview:self.previewButton];
+            
+            if (self.navigation.allowPickingOrignalPhoto) {
+                [self originalButton];
+            }
         }
         
         [self getAlbum];
@@ -163,10 +187,7 @@
     
     self.currentAlbumIndex = -1;
     
-//    NSArray *selectedAssets = [self.navigation selectedAssets];
-    
     self.albumModels = [LYImageManager fetchAlbumModels];
-
     
     if (self.navigation.selectedAssets && self.navigation.selectedAssets.count > 0) {
         
@@ -205,7 +226,7 @@
 - (UICollectionView *)collectionView {
     if (!_collectionView) {
         CGRect bounds = [UIScreen mainScreen].bounds;
-        bounds.size.height -= 64.0 + 44.0;
+        bounds.size.height -= 64.0 + (self.onlyForSinglePhoto ? 0 : 44);
         bounds.origin.x = 0.0;
         UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
         layout.itemSize = [LYAssetCCell ccellSize];
@@ -292,6 +313,7 @@
     } else {
         
         LYAssetCCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:kCCellIdentifier_Asset forIndexPath:indexPath];
+        cell.selectButton.hidden = YES;
         [cell setAssetModel:[self assetModelWithIndexPath:indexPath]];
         __weak typeof(self) weakSelf = self;
         cell.didSelectPhotoHandler = ^(LYAssetCCell *ccell) {
@@ -299,6 +321,35 @@
             [strongSelf didSelectPhotoWithAssetCCell:ccell];
         };
         return cell;
+    }
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    [collectionView deselectItemAtIndexPath:indexPath animated:YES];
+    
+    if (self.onlyForSinglePhoto) {
+       
+        PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
+        options.resizeMode = PHImageRequestOptionsResizeModeExact;
+        
+        CGFloat scale = [LYImageManager imageScale];
+        CGSize targetSize = CGSizeMake([LYAssetCCell ccellSize].width * scale, [LYAssetCCell ccellSize].height * scale);
+        
+        LYAssetModel *assetModel = [self assetModelWithIndexPath:indexPath];
+        
+        [[PHImageManager defaultManager] requestImageForAsset:assetModel.asset targetSize:targetSize contentMode:PHImageContentModeAspectFill options:options resultHandler:^(UIImage * _Nullable result, NSDictionary * _Nullable info) {
+            
+            if (![info[PHImageResultIsDegradedKey] boolValue]) {
+                
+                if (self.navigation.pickerDelegate && [self.navigation.pickerDelegate respondsToSelector:@selector(imagePickerController:didFinishPickingImages:sourceAssets:original:)]) {
+                    [self.navigation.pickerDelegate imagePickerController:self.navigation didFinishPickingImages:(result ? @[result] : @[]) sourceAssets:@[assetModel.asset] original:self.navigation.isOrignalPhotos && self.navigation.allowPickingOrignalPhoto];
+                }
+                
+                if (self.navigation.didFinishPickingImagesHandler) {
+                    self.navigation.didFinishPickingImagesHandler((result ? @[result] : @[]), @[assetModel.asset], self.navigation.isOrignalPhotos && self.navigation.allowPickingOrignalPhoto);
+                }
+            }
+        }];
     }
 }
 

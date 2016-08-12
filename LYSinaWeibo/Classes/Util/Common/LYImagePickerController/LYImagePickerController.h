@@ -16,6 +16,9 @@
 /* maxChooseCount如果为0，则表示不限数量 */
 - (instancetype)initWithMaxChooseCount:(NSUInteger)maxChooseCount pickerDelegate:(id<LYImagePickerControllerDelegate>)pickerDelegate;
 
+/* 选择单张图片 */
+- (instancetype)initWithSinglePickerDelegate:(id<LYImagePickerControllerDelegate>)pickerDelegate;
+
 @property (nonatomic, weak) id<LYImagePickerControllerDelegate> pickerDelegate;
 
 /* 照片排序，默认为降序 - NO */
@@ -32,6 +35,7 @@
 /* orignal is NO by default */
 @property (nonatomic, getter=isOrignalPhotos) BOOL orignalPhotos;
 
+//返回的images为缩略图
 @property (nonatomic, copy) void (^didFinishPickingImagesHandler)(NSArray<UIImage *> *images, NSArray<PHAsset *> *sourceAssets, BOOL original);
 @property (nonatomic, copy) void (^didCancelHandler)();
 

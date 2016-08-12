@@ -14,6 +14,7 @@
 #import "LYNavigationTitleView.h"
 #import "LYMiddlePopoverView.h"
 #import "LYSidePopoverView.h"
+#import "LYScanViewController.h"
 
 @interface LYHomeRootViewController () <LYNavigationTitleViewDelegate, LYMiddlePopoverViewDataSource, LYMiddlePopoverViewDelegate>
 
@@ -268,8 +269,15 @@
 
 - (void)showRightPopover {
     LYSidePopoverView *popoverView = [[LYSidePopoverView alloc] initWithStyle:LYSidePopoverViewStyleRight titles:@[@"雷达", @"扫一扫"] images:@[[UIImage imageNamed:@"popover_icon_radar"], [UIImage imageNamed:@"popover_icon_qrcode"]]];
+    
+    ESWeakSelf
     popoverView.didSelectRowAtIndex = ^(NSInteger index) {
-        NSLog(@"%ld", index);
+        ESStrongSelf
+        if (index == 1) {
+            LYScanViewController *vc = [[LYScanViewController alloc] init];
+            [strongSelf.navigationController pushViewController:vc animated:YES];
+        }
+        
     };
     [popoverView show];
 }
